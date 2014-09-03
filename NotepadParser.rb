@@ -86,8 +86,9 @@ class NotepadParser < Parslet::Parser
            :prop,:rtta,:ssalc,:true,:iface,:ecafi,:module,:eludom,
            :for,:in,:continue,:rof,:while,:elihw,
            :switch,:case,:break,:default,:hctiws,:return,
-           :include,:mix,:extd,:impl,:ovri,:natv,:self,
-           :publ,:prot,:priv,:unless,:sselnu
+           :include,:mix,:extends,:implements,:override,:native,:self,
+           :public,:protected,:private,:unless,:sselnu,
+           :scr,:rcs,:lambda
   
   rule(:digit) {match('[0-9]')}
   rule(:alpha) {match('[a-zA-Z_]')}
@@ -105,9 +106,9 @@ class NotepadParser < Parslet::Parser
   }
   
   rule(:deco_access) {
-    publ_keyword|
-    prot_keyword|
-    priv_keyword
+    protected_keyword|
+    private_keyword|
+    public_keyword
   }
   
   rule(:op_prefix) {
@@ -164,7 +165,7 @@ class NotepadParser < Parslet::Parser
   
   rule(:factor) {
     string|number|identifer>>(lparen>>list_args.as(:args).maybe>>rparen).maybe|true_keyword|false_keyword|nil_keyword|
-    lparen>>expr>>rparen
+    lparen>>expr>>rparen|lparen>>value_block>>rparen
   }
   
   rule(:name_class) {
@@ -294,6 +295,7 @@ class NotepadParser < Parslet::Parser
     def_global_var|
     block_if|block_for|line_if|later_if|
     block_while|block_unless|block_switch|
+    line_for|line_while|line_unless|
     return_keyword>>expr.as(:value)>>endline
   }
   
@@ -301,7 +303,8 @@ class NotepadParser < Parslet::Parser
     def_method|
     def_class_var|
     def_instance_var|
-    def_global_var
+    def_global_var|
+    def_property
   }
   
   rule(:stmt_module) {
@@ -314,9 +317,20 @@ class NotepadParser < Parslet::Parser
     def_class|
     def_module|
     def_global_var|
-    block_if|block_for|line_if|later_if|
-    block_while|block_unless|block_switch|block_switch|
+    block_script
+  }
+  
+  rule(:stmt_script) {
     expr>>endline|
+    def_local_var|
+    def_instance_var|
+    def_class_var|
+    def_global_var|
+    block_if|block_for|line_if|later_if|
+    block_while|block_unless|block_switch|
+    line_for|line_while|line_unless|
+    continue_keyword>>endline|
+    break_keyword>>endline|
     return_keyword>>expr>>endline
   }
   
@@ -328,6 +342,7 @@ class NotepadParser < Parslet::Parser
     def_global_var|
     block_if|block_for|line_if|later_if|
     block_while|block_unless|block_switch|
+    line_for|line_while|line_unless|
     continue_keyword>>endline|
     break_keyword>>endline|
     return_keyword>>expr>>endline
@@ -339,8 +354,8 @@ class NotepadParser < Parslet::Parser
   
   rule(:def_method) {
     (deco_access.as(:access).maybe>>
-     ovri_keyword.as(:override).maybe>>
-     natv_keyword.as(:native).maybe>>
+     override_keyword.as(:override).maybe>>
+     native_keyword.as(:native).maybe>>
      def_keyword.as(:start_method) >> identifer.as(:name) >>(lparen>>list_method_args.as(:args).maybe>>rparen).maybe >>newline>>
        stmt_method.as(:statement).repeat.as(:block)>>
      fed_keyword.as(:end_method)>>endline.maybe).as(:method)
@@ -348,8 +363,8 @@ class NotepadParser < Parslet::Parser
   rule(:def_class) {
     (deco_access.as(:access).maybe>>
      class_keyword.as(:start_class) >> identifer.as(:name) >> 
-     (extd_keyword>>list_classes.as(:extends)).as(:extend).maybe >> 
-     (impl_keyword>>list_classes.as(:implements)).as(:implement).maybe >> 
+     (extends_keyword>>list_classes.as(:extends)).as(:extend).maybe >> 
+     (implements_keyword>>list_classes.as(:implements)).as(:implement).maybe >> 
      newline>>
        stmt_class.as(:member).repeat.as(:members)>>
      ssalc_keyword.as(:end_class)>>endline.maybe).as(:class)
@@ -397,9 +412,15 @@ class NotepadParser < Parslet::Parser
   
   rule(:block_for) {
     (for_keyword.as(:start_for) >> identifer.as(:enum) >> in_keyword >> 
-    expr.as(:target) >> newline>>
+    expr.as(:source) >> newline>>
        stmt_block.as(:statement).repeat.as(:block) >>
      rof_keyword.as(:end_for)>>endline.maybe)
+  }
+  
+  rule(:line_for) {
+    (for_keyword.as(:start_for) >> identifer.as(:enum) >> in_keyword >> 
+    expr.as(:source) >> newline>>
+    expr.as(:target) >> endline)
   }
   
   rule(:block_while) {
@@ -408,10 +429,20 @@ class NotepadParser < Parslet::Parser
      elihw_keyword.as(:end_while)>>endline.maybe)
   }
   
+  rule(:line_while) {
+    (while_keyword.as(:start_while) >> expr.as(:cond) >> newline>>
+    expr.as(:target) >> endline)
+  }
+  
   rule(:block_unless) {
     (unless_keyword.as(:start_unless) >> expr.as(:cond) >> newline>>
        stmt_block.as(:statement).repeat.as(:block) >>
      sselnu_keyword.as(:end_unless)>>endline.maybe)
+  }
+  
+  rule(:line_unless) {
+    (unless_keyword.as(:start_unless) >> expr.as(:cond) >> newline>>
+    expr.as(:target) >> endline)
   }
   
   rule(:later_if) {
@@ -429,6 +460,43 @@ class NotepadParser < Parslet::Parser
           stmt_block.as(:statement).repeat.as(:block)
       ).as(:default).maybe>>
     hctiws_keyword.as(:end_switch)>>endline.maybe
+  }
+  
+  rule(:block_script) {
+    (scr_keyword.as(:start_script) >> newline >>
+      stmt_script.as(:statement).repeat.as(:block) >>
+    rcs_keyword.as(:end_script) >> endline.maybe).as(:script)
+  }
+  
+  rule(:def_property) {
+    (deco_access.as(:access).maybe>> prop_keyword.as(:start_property) >> identifer.as(:name) >> 
+     (lparen>>deco_access.as(:get_access)>>comma>>deco_access.as(:set_access)>>rparen).maybe >>
+     (assign >> expr.as(:value)).maybe >> endline
+    ).as(:property)
+  }
+  
+  rule(:value_block) {
+    val_line_if|val_block_if
+  }
+  
+  rule(:val_line_if) {
+    (expr.as(:expr_true) >> else_keyword >> expr.as(:expr_false) >> in_keyword >> expr.as(:cond_false)
+    ).as(:value_if)
+  }
+  
+  rule(:val_block_if) {
+    (if_keyword.as(:start_if) >> expr.as(:cond) >> newline >>
+      expr.as(:value) >> endline
+    (
+     elif_keyword.as(:elif) >> expr.as(:cond) >> newline>>
+       expr.as(:value) >> endline
+    ).as(:block_elif).repeat>>
+    (
+     else_keyword.as(:else) >> newline >>
+       expr.as(:value) >> endline
+    ).as(:block_else).maybe>>
+    fi_keyword.as(:end_if)
+    ).as(:value_if)
   }
   
   root :program
