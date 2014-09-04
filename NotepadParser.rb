@@ -88,7 +88,7 @@ class NotepadParser < Parslet::Parser
            :switch,:case,:break,:default,:hctiws,:return,
            :include,:mix,:extends,:implements,:override,:native,:self,
            :public,:protected,:private,:unless,:sselnu,
-           :scr,:rcs,:lambda
+           :scr,:rcs,:lambda,:require
   
   rule(:digit) {match('[0-9]')}
   rule(:alpha) {match('[a-zA-Z_]')}
@@ -164,7 +164,8 @@ class NotepadParser < Parslet::Parser
   }
   
   rule(:factor) {
-    string|number|identifer>>(lparen>>list_args.as(:args).maybe>>rparen).maybe|true_keyword|false_keyword|nil_keyword|
+    string|number|identifer|
+    true_keyword|false_keyword|nil_keyword|
     lparen>>expr>>rparen|lparen>>value_block>>rparen
   }
   
@@ -256,10 +257,10 @@ class NotepadParser < Parslet::Parser
   
   rule(:expr_post) {
     factor>> (
-      (lbracket>>expr>>rbracket)|
-      (lparen>>list_args>>rparen)|
-      (member>>identifer)|
-      increment|decrement
+      (lparen>>list_args.maybe>>rparen).as(:method_call)|
+      (lbracket>>expr>>rbracket).as(:indexer)|
+      (member>>identifer).as(:member_access)|
+      increment.as(:inc_later)|decrement.as(:dec_later)
     ).repeat
   }
   
@@ -317,7 +318,8 @@ class NotepadParser < Parslet::Parser
     def_class|
     def_module|
     def_global_var|
-    block_script
+    block_script|
+    line_require
   }
   
   rule(:stmt_script) {
@@ -480,13 +482,14 @@ class NotepadParser < Parslet::Parser
   }
   
   rule(:val_line_if) {
-    (expr.as(:expr_true) >> else_keyword >> expr.as(:expr_false) >> in_keyword >> expr.as(:cond_false)
+    (expr.as(:expr_true) >> else_keyword.as(:else_keyword) >> expr.as(:expr_false) >>
+     in_keyword.as(:in_keyword) >> expr.as(:cond_false)
     ).as(:value_if)
   }
   
   rule(:val_block_if) {
     (if_keyword.as(:start_if) >> expr.as(:cond) >> newline >>
-      expr.as(:value) >> endline
+      expr.as(:value) >> endline >>
     (
      elif_keyword.as(:elif) >> expr.as(:cond) >> newline>>
        expr.as(:value) >> endline
@@ -497,6 +500,10 @@ class NotepadParser < Parslet::Parser
     ).as(:block_else).maybe>>
     fi_keyword.as(:end_if)
     ).as(:value_if)
+  }
+  
+  rule(:line_require) {
+    require_keyword >> string >> endline
   }
   
   root :program

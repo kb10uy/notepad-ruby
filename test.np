@@ -2,7 +2,7 @@
 
 //七瀬さんが提示したやつ
 scr:
-  
+  a++("s")[bf][aaa](("" else "" in nil))[12("*3")];
   
 rcs
 
@@ -98,7 +98,14 @@ module s:
     fed
     
     def value_if:
-      print(("yes" else "no" in false));
+      print((if true:
+              "ss";
+             else:
+              "sss";
+             fi
+           ));
+      Sudo.AptGet(("install" else "remove" in true));
+      (test+2).to_i;
     fed
     
     native def non_virtual_method:
