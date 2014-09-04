@@ -1,0 +1,3 @@
+[:script]
+[:class]
+[:module]
