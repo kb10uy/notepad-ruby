@@ -9,47 +9,75 @@ require 'pp'
 
 module Notepad
   class Module
-    def new(name)
+    attr_accessor :name,:classes,:modules
+    def initialize(name)
       @name=name
       @classes=[]
+      @modules=[]
     end
   end
   
   class Class
-    def new(name)
+    attr_accessor :name,:methods,:class_vars,:instance_vars,:properties
+    def initialize(name)
       @name=name
       @methods=[]
       @class_vars=[]
-      @instance_vars[]
+      @instance_vars=[]
       @properties=[]
     end
   end
   
   class Method
-    def new(name)
+    attr_accessor :name,:codes
+    def initialize(name)
       @name=name
       @codes=[]
     end
   end
   
   class Variable
-    def new(name)
+    attr_accessor :name
+    def initialize(name)
       @name=name
     end
   end
   
   class Value
-    def new(name)
+    attr_accessor :name,:value
+    def initialize(name)
       @name=name
+      @value=0
     end
   end
   
   class Machine
-    def new
+    attr_accessor :modules,:classes,:methods,:variables
+    def initialize
       @modules=[]
       @classes=[]
       @methods=[]
       @variables=[]
+    end
+  end
+  
+  class Statement
+    attr_accessor :type
+    def initialize
+      @type=nil
+    end
+    
+    def execute(scope)
+      
+    end
+  end
+  
+  class ExpressionNode
+    def initialize
+    
+    end
+    def eval
+    
     end
   end
 end

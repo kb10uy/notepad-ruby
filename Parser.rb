@@ -311,6 +311,7 @@ module Notepad
     }
     
     rule(:stmt_module) {
+      def_module|
       def_class|
       (include_keyword >> name_class.as(:name) >> endline).as(:include)
     }
