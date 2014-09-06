@@ -58,10 +58,13 @@ module Notepad
             :assign_or=>'|=',
             :assign_and=>'&=',
             :bool_equ=>'==',
+            :bool_in=>'~=',
             :bool_neq=>'!=',
             :bool_gre=>'>=',
             :bool_lee=>'<=',
+            :pair_let=>'=>',
             :module_access=>'::',
+            :range=>'..',
             :bool_andalso=>'&&',
             :bool_orelse=>'||',
             :right_shift=>'>>',
@@ -90,7 +93,8 @@ module Notepad
              :switch,:case,:break,:default,:hctiws,:return,
              :include,:mix,:extends,:implements,:override,:native,:self,
              :public,:protected,:private,:unless,:sselnu,
-             :scr,:rcs,:lambda,:require
+             :scr,:rcs,:lambda,:require,:as,:with,:to,:tree,:eert,:yield,
+             :para,:arap
     
     rule(:digit) {match('[0-9]')}
     rule(:alpha) {match('[a-zA-Z_]')}
@@ -139,7 +143,8 @@ module Notepad
       bool_equ_s|
       bool_neq_s|
       bool_equ|
-      bool_neq
+      bool_neq|
+      bool_in
     }
     
     rule(:op_rel) {
@@ -166,9 +171,23 @@ module Notepad
     }
     
     rule(:factor) {
-      string|number|identifer|
+      string|number|tree|identifer|
       true_keyword|false_keyword|nil_keyword|
-      lparen>>expr>>rparen|lparen>>value_block>>rparen
+      lparen>>expr_assign>>rparen|lparen>>value_block>>rparen|
+      (lbracket>>expr.as(:list)>>rbracket).as(:array)|
+      (lbracket>>expr_assign.as(:start)>>to_keyword.as(:to)>>expr_assign.as(:end)>>rbracket).as(:range)
+    }
+    
+    rule(:tree) {
+      (
+        tree_keyword.as(:start_tree) >> newline >>
+          (pair>>(comma>>(pair)).repeat).as(:pairs).maybe >>
+        eert_keyword.as(:end_tree)
+      ).as(:tree)
+    }
+    
+    rule(:pair) {
+      (identifer.as(:key) >> pair_let >> expr_bool_or.as(:value)).as(:pair)
     }
     
     rule(:name_class) {
@@ -260,7 +279,7 @@ module Notepad
     rule(:expr_post) {
       factor>> (
         (lparen>>list_args.maybe>>rparen).as(:method_call)|
-        (lbracket>>expr>>rbracket).as(:indexer)|
+        (lbracket>>expr_assign>>rbracket).as(:indexer)|
         (member>>identifer).as(:member_access)|
         increment.as(:inc_later)|decrement.as(:dec_later)
       ).repeat
@@ -299,11 +318,12 @@ module Notepad
       block_if|block_for|line_if|later_if|
       block_while|block_unless|block_switch|
       line_for|line_while|line_unless|
-      return_keyword>>expr.as(:value)>>endline
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline
     }
     
     rule(:stmt_class) {
       def_method|
+      def_para|
       def_class_var|
       def_instance_var|
       def_global_var|
@@ -313,12 +333,15 @@ module Notepad
     rule(:stmt_module) {
       def_module|
       def_class|
+      def_native_class|
       (include_keyword >> name_class.as(:name) >> endline).as(:include)
     }
     
     rule(:stmt_global) {
       def_method|
+      def_para|
       def_class|
+      def_native_class|
       def_module|
       def_global_var|
       block_script|
@@ -334,9 +357,7 @@ module Notepad
       block_if|block_for|line_if|later_if|
       block_while|block_unless|block_switch|
       line_for|line_while|line_unless|
-      continue_keyword>>endline|
-      break_keyword>>endline|
-      return_keyword>>expr>>endline
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline
     }
     
     rule(:stmt_block) {
@@ -348,9 +369,23 @@ module Notepad
       block_if|block_for|line_if|later_if|
       block_while|block_unless|block_switch|
       line_for|line_while|line_unless|
-      continue_keyword>>endline|
-      break_keyword>>endline|
-      return_keyword>>expr>>endline
+      continue_keyword.as(:continue)>>endline|
+      break_keyword.as(:break)>>endline|
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline|
+      yield_keyword.as(:yield)>>expr_assign.as(:value)>>endline
+    }
+    
+    rule(:stmt_para) {
+      expr>>endline|
+      def_local_var|
+      def_instance_var|
+      def_class_var|
+      def_global_var|
+      block_if|block_for|line_if|later_if|
+      block_while|block_unless|block_switch|
+      line_for|line_while|line_unless|
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline|
+      yield_keyword.as(:yield)>>expr_assign.as(:value)>>endline
     }
     
     rule(:program) {
@@ -365,6 +400,15 @@ module Notepad
          stmt_method.as(:statement).repeat.as(:block)>>
        fed_keyword.as(:end_method)>>endline.maybe).as(:method)
     }
+    rule(:def_para) {
+      (
+        deco_access.as(:access).maybe>>
+        para_keyword.as(:start_para) >> identifer.as(:name) >>(lparen>>list_method_args.as(:args).maybe>>rparen).maybe >>newline>>
+          stmt_para.as(:statement).repeat.as(:block)>>
+        arap_keyword.as(:end_para)>>endline.maybe
+      ).as(:para)
+    }
+    
     rule(:def_class) {
       (deco_access.as(:access).maybe>>
        class_keyword.as(:start_class) >> identifer.as(:name) >> 
@@ -398,10 +442,10 @@ module Notepad
     }
     
     rule(:block_if) {
-      if_keyword.as(:start_if) >> expr.as(:cond) >> newline >>
+      if_keyword.as(:start_if) >> expr_assign.as(:cond) >> newline >>
         stmt_block.as(:statement).repeat.as(:block)>>
       (
-       elif_keyword.as(:elif) >> expr.as(:cond) >> newline>>
+       elif_keyword.as(:elif) >> expr_assign.as(:cond) >> newline>>
          stmt_block.as(:statement).repeat.as(:block)
       ).as(:block_elif).repeat>>
       (
@@ -412,50 +456,50 @@ module Notepad
     }
     
     rule(:line_if) {
-      if_keyword.as(:start_if) >> expr.as(:cond) >> newline >> expr.as(:target) >> endline
+      if_keyword.as(:start_if) >> expr_assign.as(:cond) >> newline >> expr.as(:target) >> endline
     }
     
     rule(:block_for) {
       (for_keyword.as(:start_for) >> identifer.as(:enum) >> in_keyword >> 
-      expr.as(:source) >> newline>>
+      expr_assign.as(:source) >> newline>>
          stmt_block.as(:statement).repeat.as(:block) >>
        rof_keyword.as(:end_for)>>endline.maybe)
     }
     
     rule(:line_for) {
       (for_keyword.as(:start_for) >> identifer.as(:enum) >> in_keyword >> 
-      expr.as(:source) >> newline>>
+      expr_assign.as(:source) >> newline>>
       expr.as(:target) >> endline)
     }
     
     rule(:block_while) {
-      (while_keyword.as(:start_while) >> expr.as(:cond) >> newline>>
+      (while_keyword.as(:start_while) >> expr_assign.as(:cond) >> newline>>
          stmt_block.as(:statement).repeat.as(:block) >>
        elihw_keyword.as(:end_while)>>endline.maybe)
     }
     
     rule(:line_while) {
-      (while_keyword.as(:start_while) >> expr.as(:cond) >> newline>>
+      (while_keyword.as(:start_while) >> expr_assign.as(:cond) >> newline>>
       expr.as(:target) >> endline)
     }
     
     rule(:block_unless) {
-      (unless_keyword.as(:start_unless) >> expr.as(:cond) >> newline>>
+      (unless_keyword.as(:start_unless) >> expr_assign.as(:cond) >> newline>>
          stmt_block.as(:statement).repeat.as(:block) >>
        sselnu_keyword.as(:end_unless)>>endline.maybe)
     }
     
     rule(:line_unless) {
-      (unless_keyword.as(:start_unless) >> expr.as(:cond) >> newline>>
+      (unless_keyword.as(:start_unless) >> expr_assign.as(:cond) >> newline>>
       expr.as(:target) >> endline)
     }
     
     rule(:later_if) {
-      expr.as(:desc) >> if_keyword.as(:if_section) >> expr.as(:condition) >> endline
+      expr.as(:desc) >> if_keyword.as(:if_section) >> expr_assign.as(:cond) >> endline
     }
     
     rule(:block_switch) {
-      switch_keyword.as(:start_switch) >> expr.as(:base).maybe >> newline >>
+      switch_keyword.as(:start_switch) >> expr_assign.as(:base).maybe >> newline >>
         (
           case_keyword.as(:start_case) >> expr.as(:cond) >> newline >>
             stmt_block.as(:statement).repeat.as(:block)
@@ -476,7 +520,7 @@ module Notepad
     rule(:def_property) {
       (deco_access.as(:access).maybe>> prop_keyword.as(:start_property) >> identifer.as(:name) >> 
        (lparen>>deco_access.as(:get_access)>>comma>>deco_access.as(:set_access)>>rparen).maybe >>
-       (assign >> expr.as(:value)).maybe >> endline
+       (assign >> expr_assign.as(:value)).maybe >> endline
       ).as(:property)
     }
     
@@ -485,28 +529,40 @@ module Notepad
     }
     
     rule(:val_line_if) {
-      (expr.as(:expr_true) >> else_keyword.as(:else_keyword) >> expr.as(:expr_false) >>
-       in_keyword.as(:in_keyword) >> expr.as(:cond_false)
+      (expr_assign.as(:expr_true) >> else_keyword.as(:else_keyword) >> expr_assign.as(:expr_false) >>
+       in_keyword.as(:in_keyword) >> expr_assign.as(:cond_false)
       ).as(:value_if)
     }
     
     rule(:val_block_if) {
-      (if_keyword.as(:start_if) >> expr.as(:cond) >> newline >>
-        expr.as(:value) >> endline >>
+      (if_keyword.as(:start_if) >> expr_assign.as(:cond) >> newline >>
+        expr_assign.as(:value) >> endline >>
       (
-       elif_keyword.as(:elif) >> expr.as(:cond) >> newline>>
-         expr.as(:value) >> endline
+       elif_keyword.as(:elif) >> expr_assign.as(:cond) >> newline>>
+         expr_assign.as(:value) >> endline
       ).as(:block_elif).repeat>>
       (
        else_keyword.as(:else) >> newline >>
-         expr.as(:value) >> endline
-      ).as(:block_else).maybe>>
+         expr_assign.as(:value) >> endline
+      ).as(:block_else)>>
       fi_keyword.as(:end_if)
       ).as(:value_if)
     }
     
     rule(:line_require) {
       require_keyword >> string >> endline
+    }
+    
+    rule(:def_native_method) {
+      def_keyword.as(:start_method) >> identifer.as(:name) >> (as_keyword >> string.as(:name)).as(:native_name)
+    }
+    
+    rule(:def_native_class) {
+      (native_keyword.as(:native_class) >> class_keyword.as(:start_class) >> identifer.as(:name) >>
+       with_keyword.as(:with) >> string.as(:library_name) >> newline >>
+        (def_native_method >> endline).as(:native_method).repeat.as(:members) >>
+       ssalc_keyword.as(:end_class)>>endline.maybe
+      ).as(:native_class)
     }
     
     root :program
