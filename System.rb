@@ -36,6 +36,22 @@ module Notepad
     end
   end
   
+  class NativeClass
+    attr_accessor :name,:library_name,:methods
+    def initialize(name,lib)
+      @name=name
+      @library_name=lib
+    end
+  end
+  
+  class NativeMethod
+    attr_accessor :name,:native_name
+    def initialize(name,native)
+      @name=name
+      @native_name=native
+    end
+  end
+  
   class Variable
     attr_accessor :name
     def initialize(name)

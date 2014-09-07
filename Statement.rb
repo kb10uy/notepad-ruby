@@ -17,5 +17,26 @@ module Notepad
     end
   end
   
+  class UnaryExpression < Notepad::ExpressionNode
+    def initialize(op,exp)
+      @operator=op
+      @expr=exp
+    end
+  end
   
+  class PostExpression < Notepad::ExpressionNode
+    def initialize(exp,op)
+      @expr=exp
+      @operator=op
+      
+    end
+  end
+  
+  class BinaryOperatorExpression < Notepad::ExpressionNode
+    def initialize(left,op,right)
+      @left=left
+      @operator=op
+      @right=right
+    end
+  end
 end

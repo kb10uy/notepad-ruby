@@ -62,11 +62,38 @@ module Notepad
       root.push cl
     end
     
+    @expr=[
+            :identifer,:string,:number,:true,:false,:nil,:tree,:array,:range,
+            :expr,:expr_assign,:expr_bool_or,:expr_bool_and,:expr_or,
+            :expr_xor,:expr_and,:expr_eq,:expr_rel,:expr_shift,:expr_add,
+            :expr_mul,:expr_unary,:expr_post
+          ]
+    
     def construct_method(node,root)
       mt=Notepad::Method.new(node[:name][:identifer])
-      
+      node[:block].each do |value|
+        case value[:statement].keys[0]
+        #式
+        when *@expr
+        #変数
+        when :local_var
+        when :class_var
+        when :instance_var
+        when :global_var
+        #制御構文
+        when :start_if
+        when :start_for
+        when :start_while
+        when :start_unless
+        when :desc
+        when :start_switch
+        end
+      end
       root.push mt
     end
     
+    def construct_expression(node)
+    
+    end
   end
 end
