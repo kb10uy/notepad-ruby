@@ -9,6 +9,6 @@ lexer=Notepad::Lexer.new parsed
 
 pp parsed
 
-#lexer.construct
+lexer.construct
 
 #pp lexer.machine

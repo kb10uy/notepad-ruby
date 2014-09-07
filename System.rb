@@ -63,7 +63,7 @@ module Notepad
     attr_accessor :name,:value
     def initialize(name)
       @name=name
-      @value=0
+      @value=nil
     end
   end
   
@@ -94,6 +94,42 @@ module Notepad
     end
     def eval
     
+    end
+  end
+  
+  class ValueOperator
+    def initialize(target)
+      @target=val
+    end
+    def binary_operate(op,right)
+      return nil
+    end
+    
+    def unary_operate(op)
+    
+    end
+    
+    def post_operate(op)
+    
+    end
+    
+    def call_method(name,args)
+      return nil
+    end
+    
+    def get_indexer
+      return nil
+    end
+    
+    def set_indexer(value)
+      
+    end
+  end
+  
+  class MethodArguments
+    attr_accessor :args
+    def initialize
+      @args=[]
     end
   end
 end

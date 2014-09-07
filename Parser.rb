@@ -171,8 +171,8 @@ module Notepad
     }
     
     rule(:factor) {
-      string|number|tree|identifer|
       true_keyword.as(:true)|false_keyword.as(:false)|nil_keyword.as(:nil)|
+      string|number|tree|identifer|
       lparen>>expr_assign>>rparen|lparen>>value_block>>rparen|
       (lbracket>>list_expr.as(:list)>>rbracket).as(:array)|
       (lbracket>>expr_assign.as(:start)>>to_keyword.as(:to)>>expr_assign.as(:end)>>rbracket).as(:range)
@@ -203,86 +203,88 @@ module Notepad
       (expr_bool_and.as(:left)>>
        (bool_orelse.as(:orelse)>>
         expr_bool_and.as(:right)).repeat(1)
-      ).as(:expr_bool_or) | expr_bool_and
+      ).as(:expr_bin) | expr_bool_and
     }
     
     rule(:expr_bool_and) {
       (expr_or.as(:left)>>
        (bool_andalso.as(:andalso)>>
         expr_bool_or.as(:right)).repeat(1)
-      ).as(:expr_bool_and) | expr_or
+      ).as(:expr_bin) | expr_or
     }
     
     rule(:expr_or) {
       (expr_xor.as(:left)>>
        (bin_or.as(:or)>>
         expr_xor.as(:right)).repeat(1)
-      ).as(:expr_or) | expr_xor
+      ).as(:expr_bin) | expr_xor
     }
     
     rule(:expr_xor) {
       (expr_and.as(:left)>>
        (bin_xor.as(:xor)>>
         expr_and.as(:right)).repeat(1)
-      ).as(:expr_xor) | expr_and
+      ).as(:expr_bin) | expr_and
     }
     
     rule(:expr_and) {
       (expr_eq.as(:left)>>
        (bin_and.as(:and)>>
         expr_eq.as(:right)).repeat(1)
-      ).as(:expr_and) | expr_eq
+      ).as(:expr_bin) | expr_eq
     }
     
     rule(:expr_eq) {
       (expr_rel.as(:left)>>
        (op_eq>>
         expr_rel.as(:right)).repeat(1)
-      ).as(:expr_eq) | expr_rel
+      ).as(:expr_bin) | expr_rel
     }
     
     rule(:expr_rel) {
       (expr_shift.as(:left)>>
        (op_rel>>
         expr_shift.as(:right)).repeat(1)
-      ).as(:expr_rel) | expr_shift
+      ).as(:expr_bin) | expr_shift
     }
     
     rule(:expr_shift) {
       (expr_add.as(:left)>>
        (op_shift>>
         expr_add.as(:right)).repeat(1)
-      ).as(:expr_shift) | expr_add
+      ).as(:expr_bin) | expr_add
     }
     
     rule(:expr_add) {
       (expr_mul.as(:left)>>
        (op_add>>
         expr_mul.as(:right)).repeat(1)
-      ).as(:expr_add) | expr_mul
+      ).as(:expr_bin) | expr_mul
     }
     
     rule(:expr_mul) {
       (expr_unary.as(:left)>>
        (op_mul>>
         expr_unary.as(:right)).repeat(1)
-      ).as(:expr_mul) | expr_unary
+      ).as(:expr_bin) | expr_unary
     }
     
     rule(:expr_unary) {
       expr_post|
-      (op_prefix>>expr_post).as(:expr_unary)|
-      (increment>>expr_post.as(:earlier_increment))|
-      (decrement>>expr_post.as(:earlier_decrement))
+      (
+       (op_prefix>>expr_post.as(:right))|
+       (increment.as(:earlier_increment)>>expr_post.as(:right))|
+       (decrement.as(:earlier_decrement)>>expr_post.as(:right))
+      ).as(:expr_unary)
     }
     
     rule(:expr_post) {
-      (factor>> (
+      (factor.as(:left)>> (
         (lparen>>list_args.maybe>>rparen).as(:method_call)|
         (lbracket>>expr_assign>>rbracket).as(:indexer)|
         (member>>identifer).as(:member_access)|
         increment.as(:later_increment)|decrement.as(:later_decrement)
-      ).repeat(1)).as(:expr_post)|factor
+      ).repeat(1).as(:posts)).as(:expr_post)|factor
     }
     
     rule(:list_args) {

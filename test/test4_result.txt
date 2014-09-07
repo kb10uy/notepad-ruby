@@ -1,0 +1,179 @@
+[{:script=>
+   {:start_script=>{:keyword=>"scr"@0},
+    :block=>
+     [{:statement=>
+        {:local_var=>{:keyword=>"local"@7},
+         :assign=>
+          {:left=>{:identifer=>"a"@13},
+           :assign=>"="@14,
+           :right=>
+            {:tree=>
+              {:start_tree=>{:keyword=>"tree"@15},
+               :pairs=>
+                [{:pair=>
+                   {:key=>{:identifer=>"key1"@33},
+                    :value=>{:number=>"12"@39}}},
+                 {:pair=>
+                   {:key=>{:identifer=>"key2"@55},
+                    :value=>
+                     {:expr_bin=>
+                       [{:left=>{:number=>"1"@61}},
+                        {:plus=>"+"@62, :right=>{:number=>"4"@63}}]}}},
+                 {:pair=>
+                   {:key=>{:identifer=>"key3"@78},
+                    :value=>{:string=>"string"@85}}},
+                 {:pair=>
+                   {:key=>{:identifer=>"key4_sub"@106},
+                    :value=>
+                     {:tree=>
+                       {:start_tree=>{:keyword=>"tree"@116},
+                        :pairs=>
+                         [{:pair=>
+                            {:key=>{:identifer=>"foo1"@136},
+                             :value=>{:number=>"12345"@142}}},
+                          {:pair=>
+                            {:key=>{:identifer=>"foo2"@163},
+                             :value=>{:number=>"67890"@169}}}],
+                        :end_tree=>{:keyword=>"eert"@187}}}}}],
+               :end_tree=>{:keyword=>"eert"@202}}}}}},
+      {:statement=>
+        {:local_var=>{:keyword=>"local"@210},
+         :assign=>
+          {:left=>{:identifer=>"b"@216},
+           :assign=>"="@217,
+           :right=>
+            {:array=>
+              {:list=>
+                {:list_expr=>
+                  [{:number=>"0"@219},
+                   {:number=>"1"@221},
+                   {:number=>"2"@223},
+                   {:number=>"3"@225},
+                   {:number=>"4"@227},
+                   {:number=>"5"@229},
+                   {:number=>"6"@231}]}}}}}},
+      {:statement=>
+        {:local_var=>{:keyword=>"local"@237},
+         :assign=>
+          {:left=>{:identifer=>"c"@243},
+           :assign=>"="@244,
+           :right=>
+            {:range=>
+              {:start=>{:number=>"0"@246},
+               :to=>{:keyword=>"to"@248},
+               :end=>{:number=>"100"@251}}}}}},
+      {:statement=>
+        {:local_var=>{:keyword=>"local"@259},
+         :assign=>
+          {:left=>{:identifer=>"d"@265},
+           :assign=>"="@266,
+           :right=>{:array=>{:list=>{:number=>"1"@268}}}}}},
+      {:statement=>
+        {:list_expr=>
+          [{:number=>"1"@274},
+           {:number=>"2"@276},
+           {:number=>"3"@278},
+           {:number=>"34"@280},
+           {:number=>"4"@283}]}},
+      {:statement=>
+        {:expr_post=>
+          {:left=>{:identifer=>"hoge"@288},
+           :posts=>
+            [{:method_call=>
+               [{:value=>
+                  {:assign=>
+                    {:left=>{:identifer=>"h"@293},
+                     :assign=>"="@294,
+                     :right=>{:number=>"1"@295}}}},
+                {:value=>{:number=>"2"@297}},
+                {:value=>{:number=>"3"@299}}]},
+             {:later_increment=>"++"@301},
+             {:indexer=>{:number=>"1"@304}}]}}},
+      {:statement=>
+        {:expr_unary=>
+          {:earlier_increment=>"++"@310, :right=>{:identifer=>"a"@312}}}},
+      {:statement=>
+        {:expr_post=>
+          {:left=>{:identifer=>"Object"@317},
+           :posts=>[{:member_access=>{:identifer=>"child"@324}}]}}}],
+    :end_script=>{:keyword=>"rcs"@331}}},
+ {:method=>
+   {:start_method=>{:keyword=>"def"@336},
+    :name=>{:identifer=>"a"@340},
+    :block=>
+     [{:statement=>
+        {:expr_post=>
+          {:left=>{:identifer=>"print"@374},
+           :posts=>
+            [{:method_call=>{:value=>{:string=>"Hello,world!"@381}}}]}}},
+      {:statement=>
+        {:expr_bin=>
+          [{:left=>{:identifer=>"a"@399}},
+           {:equal_strict=>"==="@400,
+            :right=>{:true=>{:keyword=>"true"@403}}}]}},
+      {:statement=>
+        {:expr_bin=>
+          [{:left=>{:number=>"1"@411}},
+           {:plus=>"+"@412, :right=>{:number=>"2"@413}},
+           {:plus=>"+"@414, :right=>{:number=>"3"@415}},
+           {:plus=>"+"@416, :right=>{:number=>"4"@417}},
+           {:plus=>"+"@418, :right=>{:number=>"5"@419}},
+           {:plus=>"+"@420, :right=>{:number=>"6"@421}},
+           {:plus=>"+"@422, :right=>{:number=>"7"@423}},
+           {:plus=>"+"@424, :right=>{:number=>"8"@425}},
+           {:plus=>"+"@426, :right=>{:number=>"9"@427}},
+           {:plus=>"+"@428,
+            :right=>
+             {:expr_bin=>
+               [{:left=>{:number=>"10"@429}},
+                {:divide=>"/"@431,
+                 :right=>
+                  {:array=>
+                    {:list=>
+                      {:list_expr=>
+                        [{:number=>"1"@433},
+                         {:number=>"2"@435},
+                         {:number=>"3"@437},
+                         {:number=>"4"@439},
+                         {:number=>"5"@441}]}}}}]}}]}}],
+    :end_method=>{:keyword=>"fed"@445}}}]
+###############################
+#<Notepad::PostExpression:0x2b82d30
+ @expr=#<Notepad::Identifer:0x2b82d48 @value="print"@374>,
+ @operations=
+  [#<Notepad::MethodCallOperation:0x2b826b8
+    @args=[#<Notepad::Literal:0x2b82700 @value="Hello,world!">]>]>
+###############################
+###############################
+#<Notepad::BinaryOperatorExpression:0x29f2620
+ @left=#<Notepad::Identifer:0x29f2668 @value="a"@399>,
+ @rights=
+  [{:op=>:equal_strict, :expr=>#<Notepad::Literal:0x29f2020 @value=true>}]>
+###############################
+###############################
+#<Notepad::BinaryOperatorExpression:0x29e11a8
+ @left=#<Notepad::Literal:0x29e11f0 @value=1>,
+ @rights=
+  [{:op=>:plus, :expr=>#<Notepad::Literal:0x29e0e00 @value=2>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29e0b90 @value=3>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29e0608 @value=4>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29e03c8 @value=5>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29e01e8 @value=6>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29e0020 @value=7>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29d7dd0 @value=8>},
+   {:op=>:plus, :expr=>#<Notepad::Literal:0x29d7b48 @value=9>},
+   {:op=>:plus,
+    :expr=>
+     #<Notepad::BinaryOperatorExpression:0x29d79b0
+      @left=#<Notepad::Literal:0x29d79c8 @value=10>,
+      @rights=
+       [{:op=>:divide,
+         :expr=>
+          #<Notepad::Array:0x29d6ed0
+           @expr_list=
+            [#<Notepad::Literal:0x29d7710 @value=1>,
+             #<Notepad::Literal:0x29d7518 @value=2>,
+             #<Notepad::Literal:0x29d7368 @value=3>,
+             #<Notepad::Literal:0x29d71b8 @value=4>,
+             #<Notepad::Literal:0x29d6f18 @value=5>]>}]>}]>
+###############################
