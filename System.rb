@@ -7,93 +7,63 @@ require 'bundler/setup'
 require 'parslet'
 require 'pp'
 
-module Notepad
-  class Module
-    attr_accessor :name,:classes,:modules
-    def initialize(name)
-      @name=name
-      @classes=[]
-      @modules=[]
-    end
-  end
-  
-  class Class
-    attr_accessor :name,:methods,:class_vars,:instance_vars,:properties
-    def initialize(name)
-      @name=name
-      @methods=[]
-      @class_vars=[]
-      @instance_vars=[]
-      @properties=[]
-    end
-  end
-  
-  class Method
-    attr_accessor :name,:codes
-    def initialize(name)
-      @name=name
-      @codes=[]
-    end
-  end
-  
-  class NativeClass
-    attr_accessor :name,:library_name,:methods
-    def initialize(name,lib)
-      @name=name
-      @library_name=lib
-    end
-  end
-  
-  class NativeMethod
-    attr_accessor :name,:native_name
-    def initialize(name,native)
-      @name=name
-      @native_name=native
-    end
-  end
-  
-  class Variable
-    attr_accessor :name
-    def initialize(name)
-      @name=name
-    end
-  end
-  
-  class Value
-    attr_accessor :name,:value
-    def initialize(name)
-      @name=name
-      @value=nil
-    end
-  end
-  
+require './DataStructure'
+require './lib/Builtin'
+
+module Notepad  
   class Machine
-    attr_accessor :modules,:classes,:methods,:variables
+    attr_accessor :modules,:classes,:methods,:variables,:script
     def initialize
       @modules=[]
       @classes=[]
+      @env_classes={}
       @methods=[]
       @variables=[]
-    end
-  end
-  
-  class Statement
-    attr_accessor :type
-    def initialize
-      @type=nil
+      @script=[]
     end
     
-    def execute(scope)
-      
+    def execute_script
+      @script.each do |stmt|
+        pp stmt
+        case stmt
+        when Array
+          #できるだけlist_expr直書きはやめて
+          puts "Warning : Expression list statement is deprecated. Please split."
+        when Notepad::GlobalVariableDefinition
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::ClassVariableDefinition
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::InstanceVariableDefinition
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::LocalVariableDefinition
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::Identifer
+          #puts "Not inplemented statement : #{stmt.class}"
+          
+        when Notepad::Literal
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::TreeLiteral
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::ArrayLiteral
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::RangeLiteral
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::BinaryOperatorExpression
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::Assignment
+          puts "Not inplemented statement : #{stmt.class}" 
+        when Notepad::UnaryExpression
+          #puts "Not inplemented statement : #{stmt.class}"
+        when Notepad::PostExpression
+          puts "Not inplemented statement : #{stmt.class}" 
+        else
+          puts "知るかボケ"
+        end
+      end
     end
-  end
-  
-  class ExpressionNode
-    def initialize
     
-    end
-    def eval
-    
+    def add_environment_class(cls,name)
+      @env_classes[name]=cls.new
     end
   end
   

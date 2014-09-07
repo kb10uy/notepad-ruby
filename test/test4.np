@@ -1,25 +1,3 @@
 scr:
-  local a=tree:
-            key1=>12,
-            key2=>1+4,
-            key3=>"string",
-            key4_sub=>tree:
-              foo1=>12345,
-              foo2=>67890
-            eert
-          eert;
-  local b=[0,1,2,3,4,5,6];
-  local c=[0 to 100];
-  local d=[1];
-  1,2,3,34,4;
-  hoge(h=1,2,3)++[1];
-  ++a;
-  Object.child;
+  IO.print("Hello,world!");
 rcs
-
-def a:
-  ///<<<<<<<<<<ここの部分のAST構築結果
-  print("Hello,world!");
-  a===true;
-  1+2+3+4+5+6+7+8+9+10/[1,2,3,4,5];
-fed

@@ -6,14 +6,56 @@
 require 'bundler/setup'
 require 'parslet'
 
-require './System'
-
 module Notepad
+  class Statement
+    attr_accessor :type
+    def initialize
+      @type=nil
+    end
+    
+    def execute(scope)
+      
+    end
+  end
+  
+  class ExpressionNode
+    def initialize
+    
+    end
+    def eval
+    
+    end
+  end
+  
   class Assignment < Notepad::ExpressionNode
     def initialize(left,op,right)
       @left=left
       @operator=op
       @right=right
+    end
+  end
+  
+  class GlobalVariableDefinition < Notepad::ExpressionNode
+    def initialize(list)
+      @def_list=list
+    end
+  end
+  
+  class ClassVariableDefinition < Notepad::ExpressionNode
+    def initialize(list)
+      @def_list=list
+    end
+  end
+  
+  class InstanceVariableDefinition < Notepad::ExpressionNode
+    def initialize(list)
+      @def_list=list
+    end
+  end
+  
+  class LocalVariableDefinition < Notepad::ExpressionNode
+    def initialize(list)
+      @def_list=list
     end
   end
   
@@ -104,7 +146,7 @@ module Notepad
     end
   end
   
-  class Tree < Notepad::ExpressionNode
+  class TreeLiteral < Notepad::ExpressionNode
     def initialize(thash)
       @hash_tree=thash
     end
@@ -115,7 +157,7 @@ module Notepad
   end
   
   
-  class Array < Notepad::ExpressionNode
+  class ArrayLiteral < Notepad::ExpressionNode
     def initialize(tarr)
       @expr_list=tarr
     end
@@ -125,13 +167,10 @@ module Notepad
     end
   end
   
-  class Range < Notepad::ExpressionNode
+  class RangeLiteral < Notepad::ExpressionNode
     def initialize(sex,eex)
       @start_expr=sex
       @end_expr=eex
     end
   end
-  ###############Value操作クラス
-  
-  
 end

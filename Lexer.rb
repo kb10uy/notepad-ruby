@@ -8,7 +8,7 @@ require 'parslet'
 require 'pp'
 
 require './System'
-require './Statement'
+require './SyntaxTree'
 
 module Notepad
   class Lexer
@@ -17,12 +17,17 @@ module Notepad
     def initialize(tree)
       @root=tree
       @machine=Notepad::Machine.new
+      @expr=[
+          :identifer,:string,:number,:true,:false,:nil,:tree,:array,:range,
+          :list_expr,:assign,:expr_unary,:expr_post,:expr_bin
+        ]
     end
     
     def construct
       @root.each do |value|
         case value.keys[0]
         when :script
+          construct_block value[:script][:block],@machine.script
         when :module
           construct_module value[:module],@machine.modules
         when :class
@@ -41,6 +46,7 @@ module Notepad
           construct_class value[:member][:class],md.classes
         when :module
           construct_mosule value[:member][:module],md.modules
+        #TODO: include
         end
       end
       root.push md
@@ -53,40 +59,116 @@ module Notepad
       node[:members].each do |value|
         case value[:member].keys[0]
         when :instance_var
+          cl.instance_vars.push construct_instance_var value[:member]
         when :class_var
+          cl.instance_vars.push construct_class_var value[:member]
         when :method
           construct_method value[:member][:method],cl.methods
         when :property
+          construct_property value[:member][:property],cl.properties
         end
       end
       
       root.push cl
     end
     
+    def construct_property(node,root)
+      pr=Notepad::Property.new(node[:name][:identifer])
+      if node.has_key?(:get_access) then
+        pr.get_access=node[:get_access][:keyword].to_sym
+        pr.set_access=node[:set_access][:keyword].to_sym
+      end
+      if node.has_key?(:value) then
+        pr.init_expr=construct_expression node[:value]
+      end
+      root.push pr
+    end
     
+    def construct_global_var(node)
+      ls=[]
+      if node.has_key?(:list_expr) then
+        node[:list_expr].each do |exp|
+          ls.push construct_expression exp
+        end
+      elsif node.has_key?(:assign)
+        ls.push construct_expression({:assign=>node[:assign]})
+      else
+        ls.push construct_expression({:identifer=>node[:identifer]})
+      end
+      vd=Notepad::GlobalVariableDefinition.new(ls)
+      return vd
+    end
+    
+    def construct_class_var(node)
+      ls=[]
+      if node.has_key?(:list_expr) then
+        node[:list_expr].each do |exp|
+          ls.push construct_expression exp
+        end
+      elsif node.has_key?(:assign)
+        ls.push construct_expression({:assign=>node[:assign]})
+      else
+        ls.push construct_expression({:identifer=>node[:identifer]})
+      end
+      vd=Notepad::ClassVariableDefinition.new(ls)
+      return vd
+    end
+    
+    def construct_instance_var(node)
+      ls=[]
+      if node.has_key?(:list_expr) then
+        node[:list_expr].each do |exp|
+          ls.push construct_expression exp
+        end
+      elsif node.has_key?(:assign)
+        ls.push construct_expression({:assign=>node[:assign]})
+      else
+        ls.push construct_expression({:identifer=>node[:identifer]})
+      end
+      vd=Notepad::InstanceVariableDefinition.new(ls)
+      return vd
+    end
+    
+    def construct_local_var(node)
+      ls=[]
+      if node.has_key?(:list_expr) then
+        node[:list_expr].each do |exp|
+          ls.push construct_expression exp
+        end
+      elsif node.has_key?(:assign)
+        ls.push construct_expression({:assign=>node[:assign]})
+      else
+        ls.push construct_expression({:identifer=>node[:identifer]})
+      end
+      vd=Notepad::LocalVariableDefinition.new(ls)
+      return vd
+    end
     
     def construct_method(node,root)
-      if @expr==nil then 
-        @expr=[
-          :identifer,:string,:number,:true,:false,:nil,:tree,:array,:range,
-          :list_expr,:assign,:expr_unary,:expr_post,:expr_bin
-        ]
-      end
       mt=Notepad::Method.new(node[:name][:identifer])
-      node[:block].each do |value|
+      construct_block node[:block],mt.codes
+      root.push mt
+    end
+    
+    def construct_block(node,root)
+      node.each do |value|
         case value[:statement].keys[0]
         #式
         when *@expr
-          t= construct_expression value[:statement]
-          puts "###############################"
-          pp t
-          puts "###############################"
-          
+          cd= construct_expression value[:statement]
+          #puts "###############################"
+          #pp cd
+          #puts "###############################"
+          root.push cd
         #変数
         when :local_var
+          construct_local_var value[:statement]
         when :class_var
+          construct_class_var value[:statement]
         when :instance_var
+          construct_instance_var value[:statement]
         when :global_var
+          construct_global_var value[:statement]
         #制御構文
         when :start_if
         when :start_for
@@ -96,7 +178,7 @@ module Notepad
         when :start_switch
         end
       end
-      root.push mt
+      
     end
     
     def construct_expression(node)
@@ -122,7 +204,7 @@ module Notepad
             ret[cpa[:pair][:key][:identifer]] = construct_expression cpa[:pair][:value]
           end
         end
-        return Notepad::Tree.new(ret)
+        return Notepad::TreeLiteral.new(ret)
       when :array
         ret=[]
         rno=node[:array][:list]
@@ -133,11 +215,11 @@ module Notepad
         else
           ret.push construct_expression rno
         end
-        return Notepad::Array.new(ret)
+        return Notepad::ArrayLiteral.new(ret)
       when :range
         st=construct_expression node[:range][:start]
         en=construct_expression node[:range][:end]
-        return Notepad::Range.new(st,en)
+        return Notepad::RangeLiteral.new(st,en)
       when :expr_bin
         rno=node[:expr_bin]
         ret=Notepad::BinaryOperatorExpression.new(construct_expression(rno[0][:left]))

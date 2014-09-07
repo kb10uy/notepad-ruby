@@ -309,7 +309,6 @@ module Notepad
     
     ############式ここまで
     rule(:stmt_method) {
-      list_expr>>endline|
       def_local_var|
       def_instance_var|
       def_class_var|
@@ -317,7 +316,8 @@ module Notepad
       block_if|block_for|line_if|later_if|
       block_while|block_unless|block_switch|
       line_for|line_while|line_unless|
-      return_keyword.as(:return)>>expr_assign.as(:value)>>endline
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline|
+      list_expr>>endline
     }
     
     rule(:stmt_class) {
@@ -348,7 +348,6 @@ module Notepad
     }
     
     rule(:stmt_script) {
-      list_expr>>endline|
       def_local_var|
       def_instance_var|
       def_class_var|
@@ -356,11 +355,11 @@ module Notepad
       block_if|block_for|line_if|later_if|
       block_while|block_unless|block_switch|
       line_for|line_while|line_unless|
-      return_keyword.as(:return)>>expr_assign.as(:value)>>endline
+      return_keyword.as(:return)>>expr_assign.as(:value)>>endline|
+      list_expr>>endline
     }
     
     rule(:stmt_block) {
-      list_expr>>endline|
       def_local_var|
       def_instance_var|
       def_class_var|
@@ -371,7 +370,8 @@ module Notepad
       continue_keyword.as(:continue)>>endline|
       break_keyword.as(:break)>>endline|
       return_keyword.as(:return)>>expr_assign.as(:value)>>endline|
-      yield_keyword.as(:yield)>>expr_assign.as(:value)>>endline
+      yield_keyword.as(:yield)>>expr_assign.as(:value)>>endline|
+      list_expr>>endline
     }
     
     rule(:stmt_para) {
